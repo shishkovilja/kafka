@@ -1324,6 +1324,30 @@ class AuthorizerIntegrationTest extends BaseRequestTest {
     consumer.endOffsets(Set(tp).asJava)
   }
 
+  @Test(expected = classOf[GroupAuthorizationException])
+  def testFetchOffsetsWithNoGroupRead(): Unit = {
+    createTopic(topic)
+    val consumer = createConsumer()
+    consumer.committed(Set(tp).asJava)
+  }
+
+  @Test(expected = classOf[TopicAuthorizationException])
+  def testFetchOffsetsWithNoTopicRead(): Unit = {
+    createTopic(topic)
+    addAndVerifyAcls(Set(new AccessControlEntry(clientPrincipalString, WildcardHost, READ, ALLOW)), groupResource)
+    val consumer = createConsumer()
+    consumer.committed(Set(tp).asJava)
+  }
+
+  @Test
+  def testFetchOffsetsWithTopicAndGroupRead(): Unit = {
+    createTopic(topic)
+    addAndVerifyAcls(Set(new AccessControlEntry(clientPrincipalString, WildcardHost, READ, ALLOW)), topicResource)
+    addAndVerifyAcls(Set(new AccessControlEntry(clientPrincipalString, WildcardHost, READ, ALLOW)), groupResource)
+    val consumer = createConsumer()
+    consumer.committed(Set(tp).asJava)
+  }
+
   @Test
   def testDescribeGroupApiWithNoGroupAcl(): Unit = {
     addAndVerifyAcls(Set(new AccessControlEntry(clientPrincipalString, WildcardHost, DESCRIBE, ALLOW)), topicResource)
